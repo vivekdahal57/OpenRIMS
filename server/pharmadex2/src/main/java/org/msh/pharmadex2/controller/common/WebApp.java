@@ -11,9 +11,11 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import org.msh.pdex2.i18n.Messages;
+import org.msh.pdex2.model.newRegistration.ExternalUsers;
 import org.msh.pdex2.model.old.Context;
 import org.msh.pharmadex2.service.common.ContextServices;
 import org.msh.pharmadex2.service.common.UserService;
+import org.msh.pharmadex2.service.r2.ExternalUsersService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,18 +24,19 @@ import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.core.ResolvableType;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
-import org.springframework.web.bind.annotation.CookieValue;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+
+import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 /**
  * Responsible for navigation
@@ -45,7 +48,8 @@ public class WebApp {
 	private static final Logger logger = LoggerFactory.getLogger(WebApp.class);
 	@Autowired
 	private HttpServletRequest request;
-
+	@Autowired
+	public ExternalUsersService externalUsersService;
 	@Value("${server.servlet.context-path:}")
 	private String contextPath;
 	@Autowired
@@ -97,7 +101,7 @@ public class WebApp {
 			ret.addObject("username", messages.get("email"));
 			ret.addObject("usernamePlease", messages.get("valid_email"));
 			ret.addObject("password", messages.get("temp_password"));
-			ret.addObject("login", messages.get("logincompany"));
+			ret.addObject("login", messages.get("register_form"));
 			if(useremailo.isPresent()) {
 				useremail=useremailo.get();
 			}
@@ -129,7 +133,64 @@ public class WebApp {
 		return ret;
 	}
 
-
+	@GetMapping({"/form/registrationLogin"})
+	public ModelAndView externalLogin(@RequestParam(name="view") Optional<String> viewParo,
+							  @CookieValue(name = "login_view") Optional<String> viewCooko,
+							  @CookieValue(name = "username") Optional<String> useremailo
+	){
+		//determine form view - Company User or NMRA user
+		String view="";
+		if(viewParo.isPresent()) {
+			view=viewParo.get();
+		}else {
+			if(viewCooko.isPresent()) {
+				view=viewCooko.get();
+			}
+		}
+		HttpSession session = request.getSession(false);
+		if (session != null) {
+			session.invalidate();
+		}
+		SecurityContextHolder.clearContext();
+		ModelAndView ret= new ModelAndView("registrationLogin");
+		//which view will be in use?
+		ret.addObject("view", view);
+		//common fields
+		String useremail="";
+		ret.addObject("application", messages.get("system_name"));
+		ret.addObject("get_password", messages.get("get_by_email"));
+		ret.addObject("username", messages.get("email"));
+		ret.addObject("usernamePlease", messages.get("valid_email"));
+		ret.addObject("password", messages.get("temp_password"));
+		ret.addObject("registration", messages.get("register_form"));
+		if(useremailo.isPresent()) {
+			useremail=useremailo.get();
+		}
+		ret.addObject("useremail", useremail);
+		ret.addObject("passwordPlease", messages.get("please_password"));
+		ret.addObject("passwordForgot", messages.get("lostPassword"));
+		ret.addObject("continue", messages.get("continue"));
+		ret.addObject("remember", messages.get("remember_me"));
+		//OATH2
+		ret.addObject("oath2",messages.get("oath2"));
+		ret.addObject("Google", messages.get("Google"));
+		Iterable<ClientRegistration> clientRegistrations = null;
+		ResolvableType type = ResolvableType.forInstance(clientRegistrationRepository)
+				.as(Iterable.class);
+		if (type != ResolvableType.NONE &&
+				ClientRegistration.class.isAssignableFrom(type.resolveGenerics()[0])) {
+			clientRegistrations = (Iterable<ClientRegistration>) clientRegistrationRepository;
+		}
+		Map<String,String> providers = new HashMap<String, String>();
+		clientRegistrations.forEach(registration ->
+				providers.put(registration.getClientName(),
+						"/"+authorizationRequestBaseUri + "/" + registration.getRegistrationId()));
+		ret.addObject("providers",providers);
+		//languages
+		Map<String,String> languages = messages.getLanguagesMap(LocaleContextHolder.getLocale().toString());
+		ret.addObject("languages", languages);
+		return ret;
+	}
 
 	@GetMapping({"/oauth_login"})
 	public ModelAndView logingoogle(){
@@ -160,6 +221,56 @@ public class WebApp {
 		Map<String,String> languages = messages.getLanguagesMap(LocaleContextHolder.getLocale().toString());
 		ret.addObject("languages", languages);
 		return ret;
+	}
+
+	@GetMapping("/form/externalUser")
+	public ModelAndView showRegistrationForm() {
+		HttpSession session = request.getSession(false);
+		if (session != null) {
+			session.invalidate();
+		}
+		SecurityContextHolder.clearContext();
+		ModelAndView ret= new ModelAndView("registration");
+		ret.addObject("registration", messages.get("registerme"));
+		ret.addObject("login", messages.get("register_login"));
+		Map<String,String> languages = messages.getLanguagesMap(LocaleContextHolder.getLocale().toString());
+		ret.addObject("languages", languages);
+		ret.addObject("fullNameLabel","Full Name");
+		ret.addObject("addressLabel","Address");
+		ret.addObject("phoneLabel","Phone Number");
+		ret.addObject("emailLabel", messages.get("email"));
+		ret.addObject("passwordLabel", messages.get("temp_password"));
+		ret.addObject("name","");
+		ret.addObject("address","");
+		ret.addObject("phone","");
+		ret.addObject("email", "");
+		return ret;
+	}
+
+	@RequestMapping(path="/form/externalUser",
+			method = RequestMethod.POST,
+			consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
+			produces = {
+					MediaType.APPLICATION_ATOM_XML_VALUE,
+					MediaType.APPLICATION_JSON_VALUE
+			})
+	public @ResponseBody RedirectView createExternalUser(ExternalUsers data) {
+		externalUsersService.createExternalUser(data);
+		HttpSession session = request.getSession(false);
+		if (session != null) {
+			session.invalidate();
+		}
+		SecurityContextHolder.clearContext();
+		return new RedirectView("/landing?status=success",true);
+	}
+
+	@PostMapping("/form/externalUser/{id}")
+	public ExternalUsers createExternalUser(@RequestBody ExternalUsers data, @PathVariable long id) {
+		ExternalUsers user=externalUsersService.updateExternalUser(data, id);
+		if(user==null){
+			throw new ResponseStatusException(NOT_FOUND, "Unable to find resource");
+		}
+		return user;
 	}
 
 	/**
@@ -229,7 +340,7 @@ public class WebApp {
 
 	/**
 	 * Create ModelAndView and resolve js bundle names. Currently we use only Application template
-	 * @param entryPoint 
+	 * @param entryPoint
 	 * @return
 	 */
 	private ModelAndView createWithBundles(String entryPoint) {
