@@ -298,12 +298,12 @@
 
                         <label for="psw"><b>${password}</b></label>
                         <div>
-                            <#if "nmra"== view>
-                                <Button type="button"
-                                        onClick="fetcher()">
-                                    ${get_password}
-                                </Button>
-                            </#if>
+<#--                            <#if "nmra"== view>-->
+<#--                                <Button type="button"-->
+<#--                                        onClick="fetcher()">-->
+<#--                                    ${get_password}-->
+<#--                                </Button>-->
+<#--                            </#if>-->
                             <input type="password" placeholder="${passwordPlease}" name="password" id="password">
                         </div>
                         <button type="submit">${registration}</button>

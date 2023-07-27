@@ -20,6 +20,7 @@ public class ExternalUserDetailsDTO extends AllowValidation implements UserDetai
 	private String password="";
 	private String userName="";
 	private String name="";
+	private String email="";
 	private String state="";
 	private boolean expired=false;
 	private boolean locked=false;
@@ -122,4 +123,11 @@ public class ExternalUserDetailsDTO extends AllowValidation implements UserDetai
 		return isActive();
 	}
 
+	public String getEmail() {
+		return email;
+	}
+
+	public void setEmail(String email) {
+		this.email = email;
+	}
 }

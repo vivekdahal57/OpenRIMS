@@ -88,6 +88,7 @@ public class ExternalUsersService implements UserDetailsService {
         ret.setLocked(!user.isEnabled());
         ret.setName(user.getName());
         ret.setPassword(user.getPassword());
+        ret.setEmail(user.getEmail());
         ret.getGranted().clear();
         Set<UserRoleDto> set =new HashSet<>();
         set.add(UserRoleDto.guestUser());

@@ -22,6 +22,7 @@ import org.msh.pdex2.dto.table.TableRow;
 import org.msh.pdex2.exception.ObjectNotFoundException;
 import org.msh.pdex2.i18n.Messages;
 import org.msh.pdex2.model.enums.YesNoNA;
+import org.msh.pdex2.model.newRegistration.ExternalUsers;
 import org.msh.pdex2.model.old.User;
 import org.msh.pdex2.model.old.User_role;
 import org.msh.pdex2.model.r2.Concept;
@@ -40,15 +41,12 @@ import org.msh.pharmadex2.dto.AssemblyDTO;
 import org.msh.pharmadex2.dto.DictionaryDTO;
 import org.msh.pharmadex2.dto.UserElementDTO;
 import org.msh.pharmadex2.dto.UserFormDTO;
+import org.msh.pharmadex2.dto.auth.ExternalUserDetailsDTO;
 import org.msh.pharmadex2.dto.auth.UserDetailsDTO;
 import org.msh.pharmadex2.dto.auth.UserRoleDto;
 import org.msh.pharmadex2.dto.form.FormFieldDTO;
 import org.msh.pharmadex2.dto.form.OptionDTO;
-import org.msh.pharmadex2.service.r2.AssemblyService;
-import org.msh.pharmadex2.service.r2.DictService;
-import org.msh.pharmadex2.service.r2.LiteralService;
-import org.msh.pharmadex2.service.r2.MailService;
-import org.msh.pharmadex2.service.r2.SystemService;
+import org.msh.pharmadex2.service.r2.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -110,6 +108,9 @@ public class UserService implements UserDetailsService {
 	UserDictRepo userDictRepo;
 	@Autowired
 	ConceptRepo conceptRepo;
+
+	@Autowired
+	ExternalUsersService externalUsersService;
 
 	/**
 	 * To fit the Spring Security Interface UserDetails
@@ -466,7 +467,7 @@ public class UserService implements UserDetailsService {
 	 */
 	@Transactional
 	public UserDetailsDTO userData(Authentication auth, UserDetailsDTO ret) {
-		if(auth != null && auth.getPrincipal() != null && (auth.getPrincipal() instanceof UserDetailsDTO || auth.getPrincipal() instanceof OidcUser)) {
+		if (auth != null && auth.getPrincipal() != null && (auth.getPrincipal() instanceof UserDetailsDTO || auth.getPrincipal() instanceof OidcUser)) {
 			if (auth.getPrincipal() instanceof OidcUser) {
 				OidcUser oAuth = (OidcUser) auth.getPrincipal();
 				ret = loadByEmail(oAuth.getEmail());
@@ -474,19 +475,46 @@ public class UserService implements UserDetailsService {
 					ret = new UserDetailsDTO();
 					ret.setEmail(oAuth.getEmail());
 					ret.setName(oAuth.getFullName());
-					if(oAuth.getAuthorities()!=null) {
-						for(GrantedAuthority ga : oAuth.getAuthorities()) {
+					if (oAuth.getAuthorities() != null) {
+						for (GrantedAuthority ga : oAuth.getAuthorities()) {
 							UserRoleDto ur = new UserRoleDto();
 							ur.setActive(true);
 							ur.setAuthority(ga.getAuthority());
 							ret.getGranted().add(ur);
 						}
 					}
-				}else if(ret.getName() == null) {
+				} else if (ret.getName() == null) {
 					ret.setName(oAuth.getFullName());
 				}
-			}else {
-				ret= (UserDetailsDTO) auth.getPrincipal();
+			} else {
+				ret = (UserDetailsDTO) auth.getPrincipal();
+			}
+		} else if (auth != null && auth.getPrincipal() != null && auth.getPrincipal() instanceof ExternalUserDetailsDTO) {
+			ExternalUserDetailsDTO externalUsers = (ExternalUserDetailsDTO) auth.getPrincipal();
+			ExternalUsers users=externalUsersService.loadUserByLogin(externalUsers.getEmail());
+			User user = new User();
+			user.setEmail(users.getEmail());
+			user.setAddress1(users.getAddress());
+			user.setPassword(users.getPassword());
+			user.setEnabled(users.isEnabled());
+			user.setPhoneNo(users.getPhone());
+			user.setUsername(users.getName());
+			user.setCompanyName(users.getName());
+			ret = loadByEmail(user.getEmail());;
+			if (ret == null) {
+				ret = new UserDetailsDTO();
+				ret.setEmail(externalUsers.getEmail());
+				ret.setName(externalUsers.getName());
+				if (externalUsers.getAuthorities() != null) {
+					for (GrantedAuthority ga : auth.getAuthorities()) {
+						UserRoleDto ur = new UserRoleDto();
+						ur.setActive(true);
+						ur.setAuthority(ga.getAuthority());
+						ret.getGranted().add(ur);
+					}
+				}
+			} else {
+				ret = (UserDetailsDTO) auth.getPrincipal();
 			}
 		}
 		return ret;

@@ -261,7 +261,7 @@ public class WebApp {
 			session.invalidate();
 		}
 		SecurityContextHolder.clearContext();
-		return new RedirectView("/landing?status=success",true);
+		return new RedirectView("/",true);
 	}
 
 	@PostMapping("/form/externalUser/{id}")
