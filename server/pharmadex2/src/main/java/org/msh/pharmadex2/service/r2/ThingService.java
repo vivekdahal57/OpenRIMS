@@ -5,13 +5,7 @@ import java.text.DecimalFormatSymbols;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -1806,8 +1800,12 @@ public class ThingService {
 		node=closureServ.save(node);
 		data.setNodeId(node.getID());
 		thing.setConcept(node);
+		thing.setChangedAt(new Date());
+		thing.setCreatedAt(new Date());
 		thing=thingRepo.save(thing);
 		parentThing.setConcept(parentThingNode);
+		parentThing.setChangedAt(new Date());
+		parentThing.setCreatedAt(new Date());
 		parentThing = thingRepo.save(parentThing);
 		return data;
 	}
@@ -2125,6 +2123,7 @@ public class ThingService {
 					fres.setFile(fileBytes);
 					fres.setFileSize(data.getFileSize());
 					fres.setMediatype(data.getMediaType());
+					fres.setChangedAt(new Date());
 					fres=fileRepo.save(fres);
 					ThingDoc tdoc = boilerServ.loadThingDocByFileNode(node);
 					if(data.getThingNodeId()>0) {

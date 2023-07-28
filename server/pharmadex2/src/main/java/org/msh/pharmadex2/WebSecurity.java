@@ -135,7 +135,7 @@ public class WebSecurity {
 	public static class FormRegisteredLoginEntryPoint extends WebSecurityConfigurerAdapter{
 		@Override
 		protected void configure(HttpSecurity http) throws Exception {
-			http
+			http.antMatcher("/form/externalUser")
 			.cors().disable()
 			.headers().frameOptions().disable() // allow the iFrame, however the same domain
 			.and()
@@ -194,73 +194,73 @@ public class WebSecurity {
 			.exceptionHandling().accessDeniedPage("/");
 		}
 	}
-//	/**
-//	 * Configure oath2 based authentication and authentication rules
-//	 *
-//	 * @author alexk
-//	 *
-//	 */
-//	@Configuration
-//	@Order(3)
-//	public static class Oath2EntryPoint extends WebSecurityConfigurerAdapter {
-//		@Override
-//		protected void configure(HttpSecurity http) throws Exception {
-//			http
-//			.cors().disable()
-//			.headers().frameOptions().disable() // allow the iFrame, however the same domain
-//			.and()
-//			.csrf().disable()
-//			.authorizeRequests()
-//			.antMatchers("/").permitAll()
-//			//.antMatchers("/graphql").permitAll()
-//			//.antMatchers("/graphql").permitAll()
-//			.antMatchers("/img/**").permitAll()
-//			.antMatchers("/js/**").permitAll()
-//			.antMatchers("/favicon.ico").permitAll()
-//			.antMatchers("/public/**").permitAll()
-//			.antMatchers("/api/public/**").permitAll()
-//			.antMatchers("/landing").permitAll()
-//			.antMatchers("/api/landing/report/**").permitAll()
-//			.antMatchers("/form/login").permitAll()
-//			.antMatchers("/company/login").permitAll()
-//			.antMatchers("/oauth_login").permitAll()
-//			.antMatchers("/oauth2/**").permitAll()
-//			.antMatchers("/api/common/**").permitAll()
-//			.antMatchers("/api/guest/**").hasAuthority("ROLE_GUEST")
-//			.antMatchers("/guest/**").hasAuthority("ROLE_GUEST")
-//			.antMatchers("/graphiql**").hasAuthority("ROLE_GUEST")
-//			.antMatchers("/graphql**").hasAuthority("ROLE_GUEST")
-//			.antMatchers("/admin/**").hasAuthority("ROLE_ADMIN")
-//			.antMatchers("/shablon/**").hasAuthority("ROLE_ADMIN")
-//			.antMatchers("/api/admin/**").hasAuthority("ROLE_ADMIN")
-//			//.antMatchers("/graphql").hasAuthority("ROLE_ADMIN")
-//			.antMatchers("/moderator/**").hasAuthority("ROLE_MODERATOR")
-//			.antMatchers("/api/moderator/**").hasAuthority("ROLE_MODERATOR")
-//			.antMatchers("/screener/**").hasAuthority("ROLE_SCREENER")
-//			.antMatchers("/api/screener/**").hasAuthority("ROLE_SCREENER")
-//			.antMatchers("/reviewer/**").hasAuthority("ROLE_REVIEWER")
-//			.antMatchers("/api/reviewer/**").hasAuthority("ROLE_REVIEWER")
-//			.antMatchers("/accountant/**").hasAuthority("ROLE_ACCOUNTANT")
-//			.antMatchers("/api/accountant/**").hasAuthority("ROLE_ACCOUNTANT")
-//			.antMatchers("/inspector/**").hasAuthority("ROLE_INSPECTOR")
-//			.antMatchers("/api/inspector/**").hasAuthority("ROLE_INSPECTOR")
-//			.antMatchers("/secretary/**").hasAuthority("ROLE_SECRETARY")
-//			.antMatchers("/api/secretary/**").hasAuthority("ROLE_SECRETARY")
-//			.antMatchers("/actuator").hasAuthority("ROLE_ADMIN")
-//			.antMatchers("/actuator/**").hasAuthority("ROLE_ADMIN")
-//			.anyRequest().denyAll()
-//			.and()
-//			.oauth2Login()
-//				.loginPage("/oauth_login")
-//				.successHandler(new GoogleAuthenticationSuccessHandler())
-//			.and()
-//			.logout()
-//			.logoutSuccessHandler(new PdxLogoutSuccessHandler())
-//			.deleteCookies("PDX2_SESSION","remember-me", PDX2_URL_COOKIE)
-//			.and()
-//			.exceptionHandling().accessDeniedPage("/");
-//		}
-//	}
+	/**
+	 * Configure oath2 based authentication and authentication rules
+	 *
+	 * @author alexk
+	 *
+	 */
+	@Configuration
+	@Order(3)
+	public static class Oath2EntryPoint extends WebSecurityConfigurerAdapter {
+		@Override
+		protected void configure(HttpSecurity http) throws Exception {
+			http
+			.cors().disable()
+			.headers().frameOptions().disable() // allow the iFrame, however the same domain
+			.and()
+			.csrf().disable()
+			.authorizeRequests()
+			.antMatchers("/").permitAll()
+			//.antMatchers("/graphql").permitAll()
+			//.antMatchers("/graphql").permitAll()
+			.antMatchers("/img/**").permitAll()
+			.antMatchers("/js/**").permitAll()
+			.antMatchers("/favicon.ico").permitAll()
+			.antMatchers("/public/**").permitAll()
+			.antMatchers("/api/public/**").permitAll()
+			.antMatchers("/landing").permitAll()
+			.antMatchers("/api/landing/report/**").permitAll()
+			.antMatchers("/form/login").permitAll()
+			.antMatchers("/company/login").permitAll()
+			.antMatchers("/oauth_login").permitAll()
+			.antMatchers("/oauth2/**").permitAll()
+			.antMatchers("/api/common/**").permitAll()
+			.antMatchers("/api/guest/**").hasAuthority("ROLE_GUEST")
+			.antMatchers("/guest/**").hasAuthority("ROLE_GUEST")
+			.antMatchers("/graphiql**").hasAuthority("ROLE_GUEST")
+			.antMatchers("/graphql**").hasAuthority("ROLE_GUEST")
+			.antMatchers("/admin/**").hasAuthority("ROLE_ADMIN")
+			.antMatchers("/shablon/**").hasAuthority("ROLE_ADMIN")
+			.antMatchers("/api/admin/**").hasAuthority("ROLE_ADMIN")
+			//.antMatchers("/graphql").hasAuthority("ROLE_ADMIN")
+			.antMatchers("/moderator/**").hasAuthority("ROLE_MODERATOR")
+			.antMatchers("/api/moderator/**").hasAuthority("ROLE_MODERATOR")
+			.antMatchers("/screener/**").hasAuthority("ROLE_SCREENER")
+			.antMatchers("/api/screener/**").hasAuthority("ROLE_SCREENER")
+			.antMatchers("/reviewer/**").hasAuthority("ROLE_REVIEWER")
+			.antMatchers("/api/reviewer/**").hasAuthority("ROLE_REVIEWER")
+			.antMatchers("/accountant/**").hasAuthority("ROLE_ACCOUNTANT")
+			.antMatchers("/api/accountant/**").hasAuthority("ROLE_ACCOUNTANT")
+			.antMatchers("/inspector/**").hasAuthority("ROLE_INSPECTOR")
+			.antMatchers("/api/inspector/**").hasAuthority("ROLE_INSPECTOR")
+			.antMatchers("/secretary/**").hasAuthority("ROLE_SECRETARY")
+			.antMatchers("/api/secretary/**").hasAuthority("ROLE_SECRETARY")
+			.antMatchers("/actuator").hasAuthority("ROLE_ADMIN")
+			.antMatchers("/actuator/**").hasAuthority("ROLE_ADMIN")
+			.anyRequest().denyAll()
+			.and()
+			.oauth2Login()
+				.loginPage("/oauth_login")
+				.successHandler(new GoogleAuthenticationSuccessHandler())
+			.and()
+			.logout()
+			.logoutSuccessHandler(new PdxLogoutSuccessHandler())
+			.deleteCookies("PDX2_SESSION","remember-me", PDX2_URL_COOKIE)
+			.and()
+			.exceptionHandling().accessDeniedPage("/");
+		}
+	}
 
 
 

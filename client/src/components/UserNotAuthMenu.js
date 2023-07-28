@@ -45,7 +45,7 @@ class UserNotAuthMenu extends Component{
         <Collapse isOpen={this.state.isOpen} navbar>
           <Nav className="me-auto" navbar>
             <NavItem>
-              <NavLink href="/login">{this.state.labels.quickstart}</NavLink>
+              <NavLink href="/form/registrationLogin">{this.state.labels.quickstart}</NavLink>
             </NavItem>
             <NavItem>
               <NavLink href="/form/login?view=company">{this.state.labels.logincompany}</NavLink>
